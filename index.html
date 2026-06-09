@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Playable Comic</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #000; 
+      overflow: hidden;
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .playable-container {
+      perspective: 3000px; 
+      width: 100vw;
+      height: 100vh;
+      max-width: calc(100vh * 9 / 16);
+      max-height: calc(100vw * 16 / 9);
+      position: relative;
+      background: linear-gradient(to bottom, #000000 0%, #0c0500 50%, #461902 90%, #5f1f00 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      box-sizing: border-box;
+      padding: 2vh 0;
+      box-shadow: 0 0 50px rgba(0,0,0,0.9); 
+    }
+
+    .screen-title {
+      color: #fff;
+      font-size: 34px;
+      font-weight: 800;
+      text-align: center;
+      max-width: 90%;
+      margin: 0;
+      user-select: none;
+      line-height: 1.2;
+      text-shadow: 
+        0 0 12px rgba(255, 94, 0, 1),  
+        0 0 25px rgba(255, 69, 0, 0.8),   
+        0 0 45px rgba(255, 69, 0, 0.5);  
+    }
+
+    .book-wrapper {
+      left:-5%;
+      width: 94%;
+      height: 56vh;
+      position: relative;
+      overflow: visible;
+    }
+
+    .book-wrapper::before {
+      content: '';
+      position: absolute;
+      top: -6px;      
+      bottom: -6px;   
+      left: 0;        
+      right: -12px;   
+      background: #e0531c; 
+      border-radius: 0 8px 8px 0; 
+      box-shadow: 10px 20px 40px rgba(0,0,0,0.65);
+      z-index: 1;
+    }
+
+    .book-wrapper::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 10px;
+      width: 12px;
+      height: 100%;
+      background: radial-gradient(circle, #222 30%, transparent 35%);
+      background-size: 100% 33%;
+      opacity: 0.2;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .page {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform-style: preserve-3d;
+      transform-origin: left center; 
+      z-index: 2;
+      will-change: transform;
+    }
+
+    .front, .back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      box-sizing: border-box;
+    }
+
+    .front {
+      transform: rotateY(0deg);
+      background: #fff; 
+      background-image: linear-gradient(to right, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0) 8%);
+    }
+
+    .back {
+      transform: rotateY(180deg);
+      background: #fdfdfd;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .page-curl-shadow {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      background: linear-gradient(to right, rgba(0,0,0,0.0) 55%, rgba(0,0,0,0.25) 100%);
+      z-index: 20;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .bubble-animated {
+      position: absolute;
+      max-width: 92%;
+      max-height: 92%;
+      object-fit: contain;
+      pointer-events: none;
+      z-index: 6;
+      opacity: 0;
+      transform: scale(0.85);
+    }
+
+    .page:not(.hidden) .bubble-animated {
+      animation: bubblePopUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes bubblePopUp {
+      0%   { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .page#page1 .comic-bubble_1   { animation-delay: 0.2s; }
+    .page#page2 .comic-bubble_2   { animation-delay: 1.2s; }
+    .page#pageYes .comic-bubble_Yes_1 { animation-delay: 1.2s; }
+    .page#pageYes .comic-bubble_Yes_2 { animation-delay: 1.6s; }
+    .page#pageNo .comic-bubble_No { animation-delay: 1.2s; }
+
+    .comic-art {
+      position: absolute;
+      max-width: 88%;
+      max-height: 90%;
+      object-fit: contain;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .comic-bubble_1   { top: 10%; left: 60%; }
+    .comic-bubble_2   { top: 1%;  left: 10%; }
+    .comic-bubble_Yes_1 { top: 15%; left: 20%; }
+    .comic-bubble_Yes_2 { top: 60%; left: 25%; }
+    .comic-bubble_No  { top: 60%; left: 25%; }
+
+    .page-content {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 15px 10px 30px; 
+      box-sizing: border-box;
+    }
+
+    .bottom-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      z-index: 10;
+    }
+
+    .btn-main {
+      width: 85%;
+      height: 62px;
+      background: linear-gradient(to bottom, #ff7700, #ff4500);
+      border: 2px solid #fff;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 28px;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 
+        0 0 15px rgba(255, 255, 255, 0.6),  
+        0 0 30px rgba(255, 69, 0, 0.9),   
+        0 0 10px #fff; 
+    }
+
+    .btn-main.bounce {
+      animation: mobileBounce 1.5s infinite ease-in-out;
+    }
+
+    @keyframes mobileBounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-8px); }
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 15px;
+      width: 85%;
+    }
+
+    .btn-choice {
+      flex: 1;
+      height: 62px;
+      border: 2px solid #fff;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 28px;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+      background: linear-gradient(to bottom, #ff7700, #ff4500);
+      box-shadow: 
+        0 0 15px rgba(255, 255, 255, 0.5),  
+        0 0 25px rgba(255, 69, 0, 0.8);
+    }
+
+    .sub-text {
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 15px;
+      margin-top: 12px;
+      text-align: center;
+      user-select: none;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .corner-hint {
+      position: absolute;
+      top: 0; right: 0;
+      width: 60px; height: 60px;
+      z-index: 20;
+    }
+
+    .corner-hint::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 0; height: 0;
+      border-style: solid;
+      border-width: 0 52px 52px 0;
+      border-color: transparent rgba(0,0,0,0.2) transparent transparent;
+    }
+
+    .corner-hint::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 0; height: 0;
+      border-style: solid;
+      border-width: 0 48px 48px 0;
+      border-color: transparent #d4d4d4 transparent transparent;
+      filter: drop-shadow(-3px 3px 4px rgba(0,0,0,0.25));
+      animation: foldPulse 2s infinite ease-in-out;
+      transform-origin: top right;
+    }
+
+    @keyframes foldPulse {
+      0%, 100% { border-width: 0 40px 40px 0; }
+      50%       { border-width: 0 52px 52px 0; }
+    }
+
+    #musicToggle {
+      position: absolute;
+      top: 15px; right: 15px;
+      font-size: 18px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 50%;
+      width: 38px; height: 38px;
+      cursor: pointer;
+      z-index: 100;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="playable-container">
+    <audio id="bgMusic" src="assets/music/background.mp3" loop></audio>
+    <audio id="bubble1Voice" src="assets/voice/bubble1.mp3"></audio>
+    <audio id="bubble2Voice" src="assets/voice/bubble2.mp3"></audio>
+    <audio id="pageFlipSound" src="assets/sfx/page-flip.mp3"></audio>
+
+    <button id="musicToggle" onclick="toggleMusic()">🔊</button>
+
+    <h1 class="screen-title" id="mainTitle">Dive into the story</h1>
+
+    <div class="book-wrapper">
+
+      <div class="page" id="page1">
+        <div class="front">
+          <div class="corner-hint"></div>
+          <div class="page-curl-shadow" id="curlShadow1"></div>
+          <div class="page-content">
+            <img src="assets/bg1.png" class="comic-art" alt="Art 1">
+            <img src="assets/bubble1.png" class="bubble-animated comic-bubble_1" alt="Bubble 1">
+          </div>
+        </div>
+        <div class="back"></div>
+      </div>
+
+      <div class="page hidden" id="page2">
+        <div class="front">
+          <div class="corner-hint"></div>
+          <div class="page-curl-shadow" id="curlShadow2"></div>
+          <div class="page-content">
+            <img src="assets/bg2.png" class="comic-art" alt="Art 2">
+            <img src="assets/bubble2.png" class="bubble-animated comic-bubble_2" alt="Bubble 2">
+          </div>
+        </div>
+        <div class="back"></div>
+      </div>
+
+      <div class="page hidden" id="pageYes">
+        <div class="front">
+          <div class="page-curl-shadow" id="curlShadowYes"></div>
+          <div class="page-content">
+            <img src="assets/bgYes.png" class="comic-art" alt="Art Yes">
+            <img src="assets/bubbleYes1.png" class="bubble-animated comic-bubble_Yes_1" alt="Bubble Yes 1">
+            <img src="assets/bubbleYes2.png" class="bubble-animated comic-bubble_Yes_2" alt="Bubble Yes 2">
+          </div>
+        </div>
+        <div class="back"></div>
+      </div>
+
+      <div class="page hidden" id="pageNo">
+        <div class="front">
+          <div class="page-curl-shadow" id="curlShadowNo"></div>
+          <div class="page-content">
+            <img src="assets/bgNo.png" class="comic-art" alt="Art No">
+            <img src="assets/bubbleNo.png" class="bubble-animated comic-bubble_No" alt="Bubble No">
+          </div>
+        </div>
+        <div class="back"></div>
+      </div>
+
+    </div>
+
+    <div class="bottom-area" id="actionArea">
+      <button class="btn-main bounce" onclick="startPlayable()">FIND OUT ➜</button>
+    </div>
+  </div>
+
+  <script>
+    const bgMusic       = document.getElementById('bgMusic');
+    const bubble1Voice  = document.getElementById('bubble1Voice');
+    const bubble2Voice  = document.getElementById('bubble2Voice');
+    const pageFlipSound = document.getElementById('pageFlipSound');
+
+    bgMusic.volume       = 0.25;
+    bubble1Voice.volume  = 0.9;
+    bubble2Voice.volume  = 0.9;
+    pageFlipSound.volume = 0.6;
+
+    let isInteracted = false;
+
+    const curlMap = {
+      page1:   'curlShadow1',
+      page2:   'curlShadow2',
+      pageYes: 'curlShadowYes',
+      pageNo:  'curlShadowNo'
+    };
+
+    function easeInOutCubic(t) {
+      return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;
+    }
+
+    function animatePageFlip(el, curlEl, fromDeg, toDeg, duration, done) {
+      const start = performance.now();
+      const range = toDeg - fromDeg;
+
+      function tick(now) {
+        const t      = Math.min((now - start) / duration, 1);
+        const eased  = easeInOutCubic(t);
+        const deg    = fromDeg + range * eased;
+
+        const arc    = Math.sin(t * Math.PI);
+
+        const bend   = arc * 25;
+        const scaleY = 1 - arc * 0.07;
+
+        el.style.transform = `rotateY(${deg}deg) skewY(${bend * 0.8}deg) scaleY(${scaleY})`;
+
+        if (curlEl) curlEl.style.opacity = String(arc * 0.88);
+
+        if (t < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          el.style.transform = `rotateY(${toDeg}deg)`;
+          if (curlEl) curlEl.style.opacity = '0';
+          done();
+        }
+      }
+      requestAnimationFrame(tick);
+    }
+
+    function goToPage(nextPageId, nextBubbleVoiceId = null) {
+      const current = document.querySelector('.page:not(.hidden)');
+      const next    = document.getElementById(nextPageId);
+      if (!current || !next) return;
+
+      if (isInteracted) {
+        pageFlipSound.currentTime = 0;
+        pageFlipSound.play().catch(() => {});
+      }
+
+      const curlEl = document.getElementById(curlMap[current.id] || null);
+
+      next.classList.remove('hidden');
+      next.style.zIndex  = '1';
+      current.style.zIndex = '3';
+
+      animatePageFlip(current, curlEl, 0, -180, 1100, () => {
+        current.classList.add('hidden');
+        current.style.transform = '';
+        current.style.zIndex    = '';
+        next.style.zIndex       = '2';
+        if (nextBubbleVoiceId) playBubbleVoice(nextBubbleVoiceId);
+      });
+    }
+
+    /* ── кнопки ── */
+    function startPlayable() {
+      isInteracted = true;
+      bgMusic.play().catch(() => {});
+
+      document.getElementById('mainTitle').textContent = "Let her husband watch?";
+
+      document.getElementById('actionArea').innerHTML = `
+        <div class="btn-group">
+          <button class="btn-choice" onclick="handleChoice('pageYes')">Yes</button>
+          <button class="btn-choice" onclick="handleChoice('pageNo')">No</button>
+        </div>
+      `;
+
+      goToPage('page2', 'bubble2Voice');
+    }
+
+    function handleChoice(targetPageId) {
+      document.getElementById('mainTitle').textContent = "";
+
+      document.getElementById('actionArea').innerHTML = `
+        <button class="btn-main bounce" onclick="handleCTA()">Read The Full Story ➜</button>
+        <div class="sub-text">Free registration on HoneyToon</div>
+      `;
+
+      goToPage(targetPageId);
+    }
+
+    function handleCTA() {
+      window.open('https://honeytoon.com/comic/1234', '_self');
+    }
+
+    function toggleMusic() {
+      const btn = document.getElementById('musicToggle');
+      if (bgMusic.paused) { bgMusic.play(); btn.textContent = "🔊"; }
+      else                 { bgMusic.pause(); btn.textContent = "🔇"; }
+    }
+
+    function playBubbleVoice(id) {
+      const audio = document.getElementById(id);
+      if (audio && isInteracted) {
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+      }
+    }
+
+    window.addEventListener('click', () => {
+      if (!isInteracted && bgMusic.paused) {
+        bgMusic.play().catch(() => {});
+        playBubbleVoice('bubble1Voice');
+        isInteracted = true;
+      }
+    }, { once: true });
+  </script>
+</body>
+</html>
