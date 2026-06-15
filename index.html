@@ -5,29 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Playable Comic</title>
   <style>
-    body, html {
+    html, body {
       margin: 0;
       padding: 0;
       width: 100%;
       height: 100%;
-      background: #000;
       overflow: hidden;
+      background: #000;
       font-family: 'Arial', sans-serif;
       display: flex;
       align-items: center;
       justify-content: center;
+      touch-action: manipulation;
+    }
+
+    body {
+      min-height: 100dvh;
     }
 
     .playable-container {
-      perspective: 3000px;
-      width: 100vw;
-      height: 100vh;
-      max-width: calc(100vh * 9 / 16);
-      max-height: calc(100vw * 16 / 9);
       position: relative;
+      width: min(100vw, calc(100dvh * 9 / 16));
+      height: min(100dvh, calc(100vw * 16 / 9));
+      aspect-ratio: 9 / 16;
+      perspective: 3000px;
       background: linear-gradient(to bottom, #000000 0%, #0c0500 50%, #461902 90%, #5f1f00 100%);
       box-shadow: 0 0 50px rgba(0,0,0,0.9);
       box-sizing: border-box;
+      overflow: hidden;
     }
 
     /* СТАРТОВИЙ ОВЕРЛЕЙ */
@@ -76,9 +81,10 @@
 
     .top-title-area {
       position: absolute;
-      top: -4%;
-      left: 5%;
-      width: 90%;
+      top: -5%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 92%;
       height: auto;
       display: flex;
       align-items: center;
@@ -102,8 +108,9 @@
     .book-wrapper {
       position: absolute;
       top: 11%;
-      left: 0%;
-      width: 90%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 88%;
       height: 76%;
       overflow: visible;
       z-index: 2;
@@ -114,7 +121,7 @@
       height: 100%;
       position: absolute;
       top: 0;
-      left: 0;
+      left: -7%;
       transform-style: preserve-3d;
       transform-origin: left center;
       will-change: transform;
@@ -211,7 +218,7 @@
       left: 14.5%;
       width: 61.5%;
       height: 61.3%;
-      object-fit: cover;
+      object-fit: contain;
       pointer-events: none;
       z-index: 5;
     }
@@ -238,12 +245,12 @@
       100% { opacity: 1; transform: scale(1); }
     }
 
-    /* ІДЕАЛЬНЕ РОЗМІЩЕННЯ ТЕКСТОВИХ БАБЛІВ ВІДНОСНО АРТУ */
+    /* РОЗМІЩЕННЯ ТЕКСТОВИХ БАБЛІВ ВІДНОСНО АРТУ */
     .comic-bubble_1     { top: 13.5%; left: 55%; width: 33%; }
     .comic-bubble_2     { top: 32%; left: 18%; width: 45%; }
-    .comic-bubble_Yes_1 { top: 22%; left: 18%; width: 38%; }
-    .comic-bubble_Yes_2 { top: 61%; left: 24%; width: 38%; }
-    .comic-bubble_No    { top: 61%; left: 24%; width: 40%; }
+    .comic-bubble_Yes_1 { top: 18%; left: 28%; width: 38%; }
+    .comic-bubble_Yes_2 { top: 54%; left: 21%; width: 38%; }
+    .comic-bubble_No    { top: 59%; left: 15%; width: 40%; }
 
     .page-content {
       position: relative;
@@ -257,7 +264,7 @@
       top: 80%;
       left: 0%;
       width: 100%;
-      height: avto;
+      height: auto;
       z-index: 10;
       display: flex;
       flex-direction: column;
@@ -273,8 +280,8 @@
 
     .png-btn {
       cursor: pointer;
-      max-width: 100%;
-      max-height: 85%;
+      width: min(420px, 90%);
+      height: auto;
       object-fit: contain;
       display: block;
     }
@@ -325,7 +332,49 @@
       z-index: 100;
       color: #fff;
     }
-  </style>
+  
+    @media (min-width:768px){
+      .play-btn-circle{
+        width:110px;
+        height:110px;
+      }
+
+      .play-triangle{
+        border-top:22px solid transparent;
+        border-bottom:22px solid transparent;
+        border-left:36px solid #fff;
+      }
+
+      .sub-text{
+        font-size:16px;
+      }
+
+      #musicToggle{
+        width:48px;
+        height:48px;
+        font-size:22px;
+      }
+    }
+
+    @media (min-width:1200px){
+      .playable-container{
+        max-height:95vh;
+      }
+
+      .png-btn{
+        width:min(450px,80%);
+      }
+
+      .corner-hint{
+        width:8%;
+      }
+
+      .sub-text{
+        font-size:18px;
+      }
+    }
+
+</style>
 </head>
 <body>
 
